@@ -33,7 +33,7 @@ export default function Orders() {
     switch (status) {
       case 'pending':
         return 'orange'
-      case 'paid':
+      case 'succeeded':
         return 'green'
       case 'canceled':
         return 'red'

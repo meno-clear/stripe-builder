@@ -27,6 +27,8 @@ import UserPage from './screens/user_page';
 import FindAddress from './screens/find_address';
 import AddressForm from './screens/address/address_form_page.js';
 import AddressList from './screens/address/address_list_page.js';
+import Plans from './screens/plans';
+import Checkout from './screens/checkout';
 import SellerPage from './screens/seller_page';// Imports End
 
 const Drawer = createDrawerNavigator();
@@ -50,6 +52,7 @@ export default function PrivateRoutes() {
       <Drawer.Screen name='VariantList' component={VariantList} options={{headerShown: false}}/>
       <Drawer.Screen name='AddressList' component={AddressList} options={{headerShown: false}}/>
       <Drawer.Screen name='FindAddress' component={FindAddress} />
+      <Drawer.Screen name='Plans' component={Plans} />
       <Drawer.Screen name='SellerPage' component={SellerPage} options={{headerShown: false}}/>
       {/* Drawer Routes End */} 
     </Drawer.Navigator>
@@ -58,17 +61,18 @@ export default function PrivateRoutes() {
     <Stack.Navigator initialRouteName='Root' screenOptions={{cardStyle: { backgroundColor: '#fff' }}}>
       <Stack.Group>
       {/* Stack Routes Start */}
-       <Stack.Screen name='Root' component={DrawerRoutes} options={{headerShown: false}}/>
-       <Stack.Screen name='Cart' component={Cart} options={{headerShown: false}}/>
-       <Stack.Screen name='OrderDetails' component={OrderDetails} options={{headerShown: false}}/>
-       <Stack.Screen name='Profile' component={UserPage} options={{headerShown: false}}/>
-       <Stack.Screen name='ProductForm' component={ProductForm} options={{headerShown: false}}/>
-       <Stack.Screen name='CartForm' component={CartForm} options={{headerShown: false}}/>
-       <Stack.Screen name='CartItemForm' component={CartItemForm} options={{headerShown: false}}/>
-       <Stack.Screen name='OrderForm' component={OrderForm} options={{headerShown: false}}/>
-       <Stack.Screen name='OrderItemForm' component={OrderItemForm} options={{headerShown: false}}/>
-       <Stack.Screen name='VariantForm' component={VariantForm} options={{headerShown: false}}/>
-      <Stack.Screen name='AddressForm' component={AddressForm} options={{headerShown: false}}/>
+        <Stack.Screen name='Root' component={DrawerRoutes} options={{headerShown: false}}/>
+        <Stack.Screen name='Cart' component={Cart} options={{headerShown: false}}/>
+        <Stack.Screen name='OrderDetails' component={OrderDetails} options={{headerShown: false}}/>
+        <Stack.Screen name='Profile' component={UserPage} options={{headerShown: false}}/>
+        <Stack.Screen name='ProductForm' component={ProductForm} options={{headerShown: false}}/>
+        <Stack.Screen name='CartForm' component={CartForm} options={{headerShown: false}}/>
+        <Stack.Screen name='CartItemForm' component={CartItemForm} options={{headerShown: false}}/>
+        <Stack.Screen name='OrderForm' component={OrderForm} options={{headerShown: false}}/>
+        <Stack.Screen name='OrderItemForm' component={OrderItemForm} options={{headerShown: false}}/>
+        <Stack.Screen name='VariantForm' component={VariantForm} options={{headerShown: false}}/>
+        <Stack.Screen name='AddressForm' component={AddressForm} options={{headerShown: false}}/>
+        <Stack.Screen name='Checkout' component={Checkout} options={{headerShown: false}}/>
       {/* Stack Routes End */}
       </Stack.Group>
     </Stack.Navigator>

@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import api_client from '../../config/api_client';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, CommonActions } from '@react-navigation/native';
 import { trackPromise } from 'react-promise-tracker';
 import ReturnButton from '../../components/shared/return_button';
 
@@ -29,7 +29,6 @@ export default function OrderDetails({ route }) {
     let sum_of_items = products.reduce(
       (accumulator, currentValue) => accumulator + currentValue.quantity, 0
     )
-
     setTotalItems(sum_of_items)
   }
 
@@ -85,6 +84,24 @@ export default function OrderDetails({ route }) {
     )
   }
 
+  const goToPayment = async () => {
+    setLoading(true)
+    try{
+      const {data} = await api_client.get(`payments/${order.payment_id}`)
+      navigation.dispatch(
+        CommonActions.reset({ 
+          index: 0,
+          routes: [{ name: 'Root' }],
+        })
+      )
+      navigation.navigate('Checkout', { checkout: data['checkout'], orders: data['orders'] })
+    }catch(error){
+      console.log(error)
+    }finally{
+      setLoading(false)
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {loading ?
@@ -131,6 +148,23 @@ export default function OrderDetails({ route }) {
           </View>
         </>
       }
+      {
+        order.status == 'pending' && (
+          <View style={{padding: 10, justifyContent:'center', alignItems: 'center'}}>
+            <TouchableOpacity
+              style={[styles.orderButton,{
+                opacity: loading && 0.5,
+                backgroundColor: loading ? '#ccc': '#2196F3',
+                borderColor: loading ? '#ccc': '#2196F3',
+              }]}
+              disabled={loading}
+              onPress={() => goToPayment()}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Confirm Order</Text>
+            </TouchableOpacity>
+          </View>
+        )
+      }
     </SafeAreaView>
   );
 }
@@ -145,6 +179,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 15,
     marginBottom: 10
+  },
+  orderButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    borderWidth: 1,
+    alignItems: 'center',
+    width: '100%',
+    padding: 15,
+    borderRadius: 6
   },
   title: {
     fontWeight: 'bold',

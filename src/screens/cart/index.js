@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import api_client from "../../config/api_client";
 import {
   View,
@@ -12,10 +12,25 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, CommonActions } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Feather";
+import AntdIcon from "react-native-vector-icons/AntDesign";
 import { useCart } from "../../context/cart";
+import { Modalize } from "react-native-modalize";
 import AnimatedEllipsis from 'react-native-animated-ellipsis';
+
+const paymentMethods = [
+  {
+    id: 1,
+    type: "pix",
+    icon: "qrcode",
+  },
+  {
+    id: 2,
+    type: "card",
+    icon: "creditcard",
+  },
+]
 
 export default function Cart() {
   const navigation = useNavigation();
@@ -37,6 +52,17 @@ export default function Cart() {
     price_in_cents,
     cart_items,
     market_place_partners,  } = cart;
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const checkoutModal = useRef(null);
+  const openCheckout = () => {
+    checkoutModal.current?.open();
+  };
+
+  const closeCheckout = () => {
+    checkoutModal.current?.close();
+  };
+
+  const [paymentMethod, setPaymentMethod] = useState(null);
 
   function handleIncreaseQuantity(item) {
     const index = getItemIndex(item.variant_id);
@@ -54,10 +80,21 @@ export default function Cart() {
   }
 
   function createOrder() {
+    setLoadingCheckout(true);
     api_client
-      .post(`/carts/${cart.id}/checkout`)
-      .then(() => [navigation.navigate("Home"),clearCart()])
+      .post(`/carts/${cart.id}/checkout?type=${paymentMethod}`)
+      .then(({data}) => {
+        clearCart();
+        navigation.dispatch(
+          CommonActions.reset({ 
+            index: 0,
+            routes: [{ name: 'Root' }],
+          })
+        )
+        navigation.navigate('Checkout', { checkout: data['checkout'], orders: data['orders'] })
+      })
       .catch((err) => console.error(err))
+      .finally(() => setLoadingCheckout(false));
   }
 
   const deleteItem = (id) => {
@@ -96,7 +133,20 @@ export default function Cart() {
               <Text style={styles.data}> {item?.total_price}</Text>
             </Text>
 
-            {/* end item details */}
+            {
+              item?.variant_descriptors && item?.variant_descriptors.map((descriptor, index) => {
+                return (
+                  <Text style={styles.title} key={index}>{descriptor.name}:
+                    <Text style={styles.data}> { 
+                      descriptor?.boolean_value != null ? 
+                        descriptor?.boolean_value ? 'Yes' : 'No' 
+                        : 
+                        descriptor?.value
+                    }</Text>
+                  </Text>
+                )
+              })
+            }
           </View>
 
           <View style={styles.quantityHandler}>
@@ -224,7 +274,7 @@ export default function Cart() {
 
           <View style={{ padding: 5 }}>
             <TouchableOpacity 
-              onPress={() => total_items === 0 ? navigation.goBack() : createOrder()} 
+              onPress={() => total_items === 0 ? navigation.goBack() :  openCheckout()} 
               style={[styles.orderButton, { 
                 opacity: loading && 0.5,
                 backgroundColor: total_items === 0 ? '#ccc': '#2196F3',
@@ -235,11 +285,51 @@ export default function Cart() {
                 loading ?
                 <ActivityIndicator size="small" color="#fff" />
                 :
-                <Text style={{ color: total_items === 0 ? '#393939': '#f9f9f9' }}>{total_items === 0 ? 'Voltar ao Carrinho' : 'Buy'}</Text>
+                <Text style={{ color: total_items === 0 ? '#393939': '#f9f9f9' }}>{total_items === 0 ? 'Return To Cart' : 'Buy'}</Text>
               }
             </TouchableOpacity>
           </View>
         {modalVisible && itemToDelete && <ModalComponent item={itemToDelete} setModalVisible={setModalVisible} />}
+        <Modalize ref={checkoutModal} snapPoint={300} modalHeight={300}>
+          <View style={{ padding: 15, width:'100%', height:'100%'}}>
+            <View style={{ width:'100%', height:'100%', flexDirection:'row', justifyContent:'space-between' }}>
+              { 
+                paymentMethods.map((item) => 
+                  <TouchableOpacity 
+                    key={item.id} 
+                    onPress={() => setPaymentMethod(item.type === paymentMethod ? null : item.type)} 
+                    style={[
+                      styles.item, { 
+                        marginHorizontal: 0, 
+                        justifyContent:'space-between', 
+                        width:'46%', alignItems:'center',
+                        height: 80, 
+                        borderColor: paymentMethod === item.type ? 'green' : '#ccc' 
+                      }
+                    ]}>
+                    <AntdIcon name={item.icon} size={30} color={paymentMethod === item.type ? 'green' : '#ccc'} />
+                    <Text style={{ color: paymentMethod === item.type ? 'green' : '#ccc', textTransform:'capitalize', fontSize: 20, fontWeight: 'bold' }}>{item.type}</Text>
+                  </TouchableOpacity>
+                )
+              }
+            </View>
+            <TouchableOpacity 
+                onPress={() => !paymentMethod ? closeCheckout() : createOrder()} 
+                style={[styles.orderButton, { 
+                  opacity: loadingCheckout && 0.5,
+                  backgroundColor: !paymentMethod ? '#ccc': '#2196F3',
+                  borderColor: !paymentMethod ? '#ccc': '#2196F3',
+                }]} 
+                disabled={loadingCheckout}>
+                { 
+                  loadingCheckout ?
+                  <ActivityIndicator size="small" color="#fff" />
+                  :
+                  <Text style={{ color: !paymentMethod ? '#393939': '#f9f9f9', fontWeight:'bold' }}>{!paymentMethod ? 'Return to Cart' : 'Checkout'}</Text>
+                }
+              </TouchableOpacity>
+          </View>
+        </Modalize>
     </SafeAreaView>
   );
 }

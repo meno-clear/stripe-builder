@@ -1,67 +1,95 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, forwardRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modalize } from 'react-native-modalize';
 import { FlatList } from 'react-native-gesture-handler';
+import PaymentMethods from '../../../components/payment_methods';
 import Icon from 'react-native-vector-icons/Feather';
-import { NewCardButton } from '../../../components/future_card_button';
 import api_client from '../../../config/api_client';
 
 // import { Container } from './styles';
 
-const PricesModal = ({ modalVisible, closeModal, prices, plan }) => {
+const PricesModal = forwardRef(({ prices, plan }, ref) => {
   const [selectedPrice, setSelectedPrice] = useState(null);
+  const [showChoice, setShowChoice] = useState(false);
   return (
-    <Modal
+    <Modalize
       animationType="slide"
-      transparent={true}
-      visible={modalVisible}
-      onRequestClose={closeModal}
+      snapPoint={300}
+      modalHeight={showChoice ? 500 : 300}
+      onClose={() => [setSelectedPrice(null), setShowChoice(false)]}
+      modalStyle={{
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        width: '100%',
+      }}
+      ref={ref}
     >
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          <TouchableOpacity onPress={closeModal} style={{ position: 'absolute', right: 0, margin: 10 }}>
-            <Icon name="x" size={32} color="#d3d3d3" />
-          </TouchableOpacity>
-          <View style={{ alignItems: 'center', height: '80%', width: '100%' }}>
-            <Text style={styles.title}>{plan?.name}</Text>
-            <FlatList
-              style={{ width: '100%' }}
-              data={prices}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.item, { borderColor: selectedPrice?.id === item.id ? '#2196F3' : '#393939' }]}
-                  onPress={() => setSelectedPrice(selectedPrice?.id === item.id ? null : item)}>
-                  <Text style={styles.text}>
-                    {item?.interval_count}/{item?.interval}
-                  </Text>
-                  <Text style={[styles.text, { color: '#2196f3' }]}>
-                    {item?.amount / 100}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              keyExtractor={item => item.id}
-              ListEmptyComponent={() => <View style={{ alignItems: 'center' }}><Text style={styles.title} >Prices not found.</Text></View>}
-            />
-          </View>
-          <NewCardButton disabled={!selectedPrice} price={selectedPrice} />
+          { showChoice ?
+            <PaymentMethods ref={ref} price={selectedPrice}/>
+            :
+            <>
+              <View style={{ alignItems: 'center', height: 160, width: '100%' }}>
+                <Text style={styles.title}>{plan?.name}</Text>
+                <FlatList
+                  style={{ width: '100%', flexDirection:'row'}}
+                  horizontal={true}
+                  data={prices}
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[styles.item, { borderColor: selectedPrice?.id === item.id ? '#2196F3' : '#393939' }]}
+                      onPress={() => setSelectedPrice(selectedPrice?.id === item.id ? null : item)}>
+                      <Text style={styles.text}>
+                        {item?.interval_count}/{item?.interval}
+                      </Text>
+                      <Text style={[styles.text, { color: '#2196f3' }]}>
+                        {item?.amount / 100}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  keyExtractor={item => item.id}
+                  ListEmptyComponent={() => <View style={{ alignItems: 'center' }}><Text style={styles.title} >Prices not found.</Text></View>}
+                />
+              </View>
+              <TouchableOpacity
+                variant="primary"
+                disabled={!selectedPrice}
+                onPress={() => setShowChoice(true)}
+                style={[styles.button,{
+                  opacity: !selectedPrice  && 0.5,
+                  backgroundColor: !selectedPrice  ? '#ccc' : '#2196F3',
+                  borderColor: !selectedPrice ? '#ccc' : '#2196F3',
+                }]}
+              >
+                <Text style={{
+                  color: '#fff',
+                  fontWeight: 'bold'
+                }}>
+                    Choice Payment Method
+                </Text>
+              </TouchableOpacity>
+            </>
+          }
         </View>
       </View>
-    </Modal>
+    </Modalize>
   )
-}
+})
 
 const styles = StyleSheet.create({
   item: {
     backgroundColor: '#fff',
     borderWidth: 1.5,
-    padding: 20,
-    flexDirection: 'row',
+    padding: 10,
     borderRadius: 8,
-    gap: 10,
+    marginHorizontal: 12,
     justifyContent: 'space-between',
     marginVertical: 10,
-    height: 60,
-    width: '100%',
+    height: 100,
+    width: 100,
     alignItems: 'center',
   },
   title: {
@@ -77,34 +105,26 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
+    borderWidth: 1,
+    alignItems: 'center',
+    width: '100%',
+    padding: 15,
+    borderRadius: 6,
     height: 50,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
   },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 22,
   },
   modalView: {
-    margin: 20,
     backgroundColor: 'white',
     borderRadius: 20,
     height: 400,
-    width: '90%',
-    padding: 35,
-    justifyContent: 'space-between',
+    width: '100%',
+    padding: 10,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   textStyle: {
     color: 'white',

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Modal, Pressable } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
@@ -14,6 +14,7 @@ function Plans() {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const cardFormModalizeRef = useRef(null);
 
   const fetchPlans = async () => {
     setLoading(true);
@@ -64,10 +65,6 @@ function Plans() {
     </TouchableOpacity>
   )
 
-  const PlansModal = () => {
-
-  }
-
   if (loading && !plans) {
     return (
       <SafeAreaView style={styles.container}>
@@ -87,7 +84,7 @@ function Plans() {
         ListEmptyComponent={() => <View style={{alignItems:'center'}}><Text style={styles.title} >Plans not found.</Text></View>}
       />
       { selectedPlan &&
-        <TouchableOpacity style={[styles.button, styles.selectButton, { backgroundColor: loading ? '#ccc' : '#2196F3' }]} onPress={() => setModalVisible(true)} disabled={loading}>
+        <TouchableOpacity style={[styles.button, styles.selectButton, { backgroundColor: loading ? '#ccc' : '#2196F3' }]} onPress={() => cardFormModalizeRef.current?.open()} disabled={loading}>
           {
             loading ? <ActivityIndicator size="small" color="#2196F3" />
             :
@@ -95,7 +92,7 @@ function Plans() {
           }
         </TouchableOpacity>
       }
-      <PricesModal plan={selectedPlan} closeModal={() => setModalVisible(false)} prices={prices} modalVisible={modalVisible} />
+      <PricesModal ref={cardFormModalizeRef} plan={selectedPlan} prices={prices} />
     </SafeAreaView>
   )
 }
